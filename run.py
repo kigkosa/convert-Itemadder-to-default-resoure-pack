@@ -10,6 +10,20 @@ if not os.path.isdir('./ItemsAdder'):
     os.mkdir('./ItemsAdder/data') 
     exit()
 
+# itemadder new to old
+if os.path.isdir('./ItemsAdder/contents'):
+    if os.path.isdir('./ItemsAdder/data'):
+        shutil.rmtree('./ItemsAdder/data')
+        os.mkdir('./ItemsAdder/data') 
+        os.mkdir('./ItemsAdder/data/items_packs')
+
+         
+    for get_namespace in os.listdir('./ItemsAdder/contents'):
+        shutil.copytree('./ItemsAdder/contents/'+get_namespace+'/configs','./ItemsAdder/data/items_packs/'+get_namespace)
+        shutil.copytree('./ItemsAdder/contents/'+get_namespace+'/resourcepack','./ItemsAdder/data/resource_pack')
+    shutil.rmtree('./ItemsAdder/contents')
+
+
 # check file and gen file
 if not os.path.exists("./custom_model_data.txt"):
     with open('./custom_model_data.txt','w') as f:
@@ -41,10 +55,8 @@ for get_namespace in os.listdir(itemadder):
             if  'items' in documents: 
                 for key in documents['items']:
                     if documents['items'][key]['resource']['generate'] is False:
-                        # if documents['items'][key]['resource']['material'] in item_m:
                         if documents['items'][key]['resource']['material'] not in item_m:
                             item_m[documents['items'][key]['resource']['material']] = []
-                        # print(documents['items'][key]['resource']['model_path'])
                         documents['items'][key]['resource']['model_path'] = documents['info']['namespace']+':'+documents['items'][key]['resource']['model_path']
                         item_m[documents['items'][key]['resource']['material']].append({ id:documents['items'][key]})
                         id=id+1
@@ -71,7 +83,7 @@ for k in item_m:
                                 data['overrides'].append({"predicate": {"custom_model_data": kk ,"pulling": 1,"pull": 0.65}, "model":  di[kk]['resource']['model_path']+"_1"})
                                 data['overrides'].append({"predicate": {"custom_model_data": kk ,"pulling": 1,"pull": 0.09}, "model":  di[kk]['resource']['model_path']+"_2"})
                             elif k == "SHIELD":
-                                print(k)
+                                data['overrides'][0]['model'] = "item/shield"
                                 data['overrides'].append({"predicate": {"custom_model_data": kk ,"blocking": 1}, "model":  di[kk]['resource']['model_path']+"_blocking"})
                             elif k == "FISHING_ROD":
                                 data['overrides'].append({"predicate": {"custom_model_data": kk ,"cast": 1}, "model":  di[kk]['resource']['model_path']+"_cast"})
@@ -86,5 +98,4 @@ for k in item_m:
 with open('./custom_model_data.txt', 'w') as f:
     id +=1
     f.write(str(id))
-shutil.rmtree(f'C:/Users/kig/curseforge/minecraft/Instances/Fabulously Optimized/resourcepacks/Output')
-shutil.copytree('./Output',f'C:/Users/kig/curseforge/minecraft/Instances/Fabulously Optimized/resourcepacks/Output')
+print('Done!')

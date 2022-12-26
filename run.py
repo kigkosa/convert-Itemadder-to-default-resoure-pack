@@ -30,7 +30,8 @@ if not os.path.exists("./custom_model_data.txt"):
         f.write('0')
 
 # gen fonder output
-shutil.rmtree('./Output')
+if os.path.isdir('./Output'):
+    shutil.rmtree('./Output')
 if not os.path.isdir('./Output'):
     os.mkdir('./Output') 
     os.mkdir('./Output/assets') 

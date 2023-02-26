@@ -7,21 +7,9 @@ import json
 # gen fonder ia
 if not os.path.isdir('./ItemsAdder'):
     os.mkdir('./ItemsAdder') 
-    os.mkdir('./ItemsAdder/data') 
+    os.mkdir('./ItemsAdder/contents') 
     exit()
 
-# itemadder new to old
-if os.path.isdir('./ItemsAdder/contents'):
-    if os.path.isdir('./ItemsAdder/data'):
-        shutil.rmtree('./ItemsAdder/data')
-        os.mkdir('./ItemsAdder/data') 
-        os.mkdir('./ItemsAdder/data/items_packs')
-
-         
-    for get_namespace in os.listdir('./ItemsAdder/contents'):
-        shutil.copytree('./ItemsAdder/contents/'+get_namespace+'/configs','./ItemsAdder/data/items_packs/'+get_namespace)
-        shutil.copytree('./ItemsAdder/contents/'+get_namespace+'/resourcepack','./ItemsAdder/data/resource_pack')
-    shutil.rmtree('./ItemsAdder/contents')
 
 
 # check file and gen file
@@ -41,17 +29,19 @@ if not os.path.isdir('./Output'):
     os.mkdir('./Output/assets/minecraft/models/item') 
     
 
-itemadder = './ItemsAdder/data/resource_pack/assets'
+itemadder = './ItemsAdder/contents'
 for get_namespace in os.listdir(itemadder):
-    shutil.copytree(itemadder+'/'+get_namespace,'./Output/assets/'+get_namespace)
-itemadder = './ItemsAdder/data/items_packs'
+    shutil.copytree(itemadder+'/'+get_namespace+"/resourcepack/assets/"+get_namespace,'./Output/assets/'+get_namespace)
+
+
+itemadder = './ItemsAdder/contents'
 item_m = {}
 id = 0
 with open('./custom_model_data.txt','r') as file:
     id = int(file.read())
 for get_namespace in os.listdir(itemadder):
-    for get_file in os.listdir(itemadder+"/"+get_namespace):
-        with open(itemadder+"/"+get_namespace+"/"+get_file) as file:
+    for get_file in os.listdir(itemadder+"/"+get_namespace+"/configs"):
+        with open(itemadder+"/"+get_namespace+"/configs"+"/"+get_file) as file:
             documents = yaml.full_load(file)
             if  'items' in documents: 
                 for key in documents['items']:

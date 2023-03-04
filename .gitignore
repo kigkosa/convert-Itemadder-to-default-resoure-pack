@@ -3,4 +3,4 @@
 custom_model_data.txt
 /dist
 /build
-ia-to-ox-for-windows.spec
+*.spec

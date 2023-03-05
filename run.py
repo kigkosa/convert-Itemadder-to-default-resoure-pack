@@ -44,15 +44,38 @@ for get_namespace in os.listdir(itemadder):
         with open(itemadder+"/"+get_namespace+"/configs"+"/"+get_file) as file:
             documents = yaml.full_load(file)
             if  'items' in documents: 
+                alt_dat = []
                 for key in documents['items']:
                     if documents['items'][key]['resource']['generate'] is False:
+                        with open('./Output/assets/'+documents['info']['namespace']+'/models/'+documents['items'][key]['resource']['model_path']+'.json', 'r') as f:
+                            data = json.load(f)
+                        for i in data['textures']:
+
+                            alt_dat.append(data['textures'][i])
+                        
+
+                        
                         if documents['items'][key]['resource']['material'] not in item_m:
                             item_m[documents['items'][key]['resource']['material']] = []
                         documents['items'][key]['resource']['model_path'] = documents['info']['namespace']+':'+documents['items'][key]['resource']['model_path']
                         item_m[documents['items'][key]['resource']['material']].append({ id:documents['items'][key]})
                         id=id+1
+                alt_dat = sorted(set(alt_dat))
+                alt_data = { "sources": [  ]}
+                for i in alt_dat:
+                    alt_data['sources'].append({ "type": "single", "resource": i })
+                # /Output/assets/minecraft/atlases/blocks.json check create path
+                if not os.path.exists("./Output/assets/minecraft"):
+                    os.mkdir('./Output/assets/minecraft')
+                if not os.path.exists("./Output/assets/minecraft/atlases"):
+                    os.mkdir('./Output/assets/minecraft/atlases')
+                    
+
+                with open('./Output/assets/minecraft/atlases/blocks.json', 'w') as jsonfile:
+                    json.dump(alt_data, jsonfile)
 
 for k in item_m:
+
 
     for get_default_model_type in os.listdir(f"./default_model"):
         for get_default_model in os.listdir(f"./default_model/{get_default_model_type}"):
@@ -89,4 +112,6 @@ for k in item_m:
 with open('./custom_model_data.txt', 'w') as f:
     id +=1
     f.write(str(id))
+
+
 print('Done!')

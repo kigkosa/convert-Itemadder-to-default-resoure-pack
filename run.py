@@ -30,16 +30,20 @@ if not os.path.isdir('./Output'):
     os.mkdir('./Output/assets/minecraft/models/item') 
     
 
-# itemadder = './ItemsAdder/contents'
-# for get_namespace in os.listdir(itemadder):
-#     shutil.copytree(itemadder+'/'+get_namespace+"/resourcepack/assets/"+get_namespace,'./Output/assets/'+get_namespace)
-
 
 itemadder = './ItemsAdder/contents'
 item_m = {}
 id = 0
-with open('./custom_model_data.txt','r') as file:
-    id = int(file.read())
+
+
+fix_id_10101=False
+ec_mode =False
+
+if fix_id_10101 ==False:
+    with open('./custom_model_data.txt','r') as file:
+        id = int(file.read())
+else:
+    id = 10101
 alt_dat = []
 for get_namespace in os.listdir(itemadder):
     for get_file in os.listdir(itemadder+"/"+get_namespace+"/configs"):
@@ -156,10 +160,11 @@ for k in item_m:
                     data["overrides"].append(sl[i])
                 with open('./Output/assets/minecraft/models/item/'+k.lower()+'.json', 'w') as jsonfile:
                     json.dump(data, jsonfile)
-
-with open('./custom_model_data.txt', 'w') as f:
-    id +=1
-    f.write(str(id))
-
-
+if fix_id_10101 ==False:
+    with open('./custom_model_data.txt', 'w') as f:
+        id +=1
+        f.write(str(id))
+if ec_mode == True:
+    shutil.copy('ec_pack.mcmeta','./Output/pack.mcmeta')
+    shutil.copy('How to get items.txt','./Output/How to get items.txt')
 print('Done!')

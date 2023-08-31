@@ -30,9 +30,9 @@ if not os.path.isdir('./Output'):
     os.mkdir('./Output/assets/minecraft/models/item') 
     
 
-itemadder = './ItemsAdder/contents'
-for get_namespace in os.listdir(itemadder):
-    shutil.copytree(itemadder+'/'+get_namespace+"/resourcepack/assets/"+get_namespace,'./Output/assets/'+get_namespace)
+# itemadder = './ItemsAdder/contents'
+# for get_namespace in os.listdir(itemadder):
+#     shutil.copytree(itemadder+'/'+get_namespace+"/resourcepack/assets/"+get_namespace,'./Output/assets/'+get_namespace)
 
 
 itemadder = './ItemsAdder/contents'
@@ -43,9 +43,12 @@ with open('./custom_model_data.txt','r') as file:
 alt_dat = []
 for get_namespace in os.listdir(itemadder):
     for get_file in os.listdir(itemadder+"/"+get_namespace+"/configs"):
+
+
         with open(itemadder+"/"+get_namespace+"/configs"+"/"+get_file) as file:
             documents = yaml.full_load(file)
-
+            if not os.path.exists('./Output/assets/'+documents['info']['namespace']):
+                shutil.copytree(itemadder+'/'+get_namespace+"/resourcepack/assets/"+documents['info']['namespace'],'./Output/assets/'+documents['info']['namespace'])
             if  'items' in documents: 
                 
                 for key in documents['items']:

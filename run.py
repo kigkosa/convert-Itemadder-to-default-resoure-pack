@@ -49,6 +49,7 @@ for get_namespace in os.listdir(itemadder):
             if  'items' in documents: 
                 
                 for key in documents['items']:
+                    
                     if documents['items'][key]['resource']['generate'] is False:
                         with open('./Output/assets/'+documents['info']['namespace']+'/models/'+documents['items'][key]['resource']['model_path']+'.json', 'r') as f:
                             data = json.load(f)
@@ -60,34 +61,35 @@ for get_namespace in os.listdir(itemadder):
                         if documents['items'][key]['resource']['material'] not in item_m:
                             item_m[documents['items'][key]['resource']['material']] = []
                         documents['items'][key]['resource']['model_path'] = documents['info']['namespace']+':'+documents['items'][key]['resource']['model_path']
-                        if documents['items'][key]['resource']['model_id'] is not None:
+                        
+                        if 'model_id' in documents['items'][key]['resource'] :
                             item_m[documents['items'][key]['resource']['material']].append({ documents['items'][key]['resource']['model_id']:documents['items'][key]})
                             
                         else:
                             item_m[documents['items'][key]['resource']['material']].append({ id:documents['items'][key]})
                             id=id+1
                     else:
-                                    
-                        _met = documents['items'][key]['resource']['material'].lower()
-                        data = {}
-                        for file in glob.glob("./default_model/**/"+_met+".json", recursive=True):
-                            with open(file, 'r') as f:
-                                data = json.load(f)
-                        data['textures']['layer0'] = documents['info']['namespace']+':'+documents['items'][key]['resource']['textures'][0]
-                        with open('./Output/assets/'+documents['info']['namespace']+'/models/'+key+'.json', 'w') as jsonfile:
-                            json.dump(data, jsonfile)
-                        # alt_dat.append( documents['info']['namespace']+':'+documents['items'][key]['resource']['textures'][0])
-                        documents['items'][key]['resource']['model_path'] = documents['info']['namespace']+':'+key
-                        if documents['items'][key]['resource']['material'] not in item_m:
-                            item_m[documents['items'][key]['resource']['material']] = []
-                        if documents['items'][key]['resource']['model_id'] is not None:
-                            item_m[documents['items'][key]['resource']['material']].append({ documents['items'][key]['resource']['model_id']:documents['items'][key]})
-                        else:                            
-                            item_m[documents['items'][key]['resource']['material']].append({ id:documents['items'][key]})
-                            id=id+1
-                        # alt_dat.append( documents['info']['namespace']+':'+documents['items'][key]['resource']['textures'][0])
-                        for i in documents['items'][key]['resource']['textures']:
-                            alt_dat.append( documents['info']['namespace']+':'+i)
+                        if 'material' in documents['items'][key]['resource']:
+                            _met = documents['items'][key]['resource']['material'].lower()
+                            data = {}
+                            for file in glob.glob("./default_model/**/"+_met+".json", recursive=True):
+                                with open(file, 'r') as f:
+                                    data = json.load(f)
+                            data['textures']['layer0'] = documents['info']['namespace']+':'+documents['items'][key]['resource']['textures'][0]
+                            with open('./Output/assets/'+documents['info']['namespace']+'/models/'+key+'.json', 'w') as jsonfile:
+                                json.dump(data, jsonfile)
+                            # alt_dat.append( documents['info']['namespace']+':'+documents['items'][key]['resource']['textures'][0])
+                            documents['items'][key]['resource']['model_path'] = documents['info']['namespace']+':'+key
+                            if documents['items'][key]['resource']['material'] not in item_m:
+                                item_m[documents['items'][key]['resource']['material']] = []
+                            if documents['items'][key]['resource']['model_id'] is not None:
+                                item_m[documents['items'][key]['resource']['material']].append({ documents['items'][key]['resource']['model_id']:documents['items'][key]})
+                            else:                            
+                                item_m[documents['items'][key]['resource']['material']].append({ id:documents['items'][key]})
+                                id=id+1
+                            # alt_dat.append( documents['info']['namespace']+':'+documents['items'][key]['resource']['textures'][0])
+                            for i in documents['items'][key]['resource']['textures']:
+                                alt_dat.append( documents['info']['namespace']+':'+i)
 
              
 
@@ -143,7 +145,8 @@ for k in item_m:
                 
                 sl = {}
                 for i in data["overrides"]:
-                    sl[i["predicate"]["custom_model_data"]] = i
+                    if "custom_model_data" in i["predicate"]:
+                        sl[i["predicate"]["custom_model_data"]] = i
                 # slot key sl
                 data["overrides"] = []
                 for i in sorted(sl):

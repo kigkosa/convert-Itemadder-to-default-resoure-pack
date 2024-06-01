@@ -52,7 +52,7 @@ item_m = {}
 id = 0
 
 
-fix_id_10101=True
+fix_id_10101=False
 
 
 if fix_id_10101 ==False:

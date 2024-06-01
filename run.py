@@ -5,6 +5,14 @@ import yaml
 
 import json
 
+import requests
+
+
+if not os.path.exists("./pack.mcmeta"):
+    with open('./pack.mcmeta', 'w') as f:
+        f.write('{"pack":{"pack_format":15,"description":""}}')
+
+
 # gen fonder ia
 if not os.path.isdir('./ItemsAdder'):
     os.mkdir('./ItemsAdder') 
@@ -36,8 +44,8 @@ item_m = {}
 id = 0
 
 
-fix_id_10101=False
-ec_mode =False
+fix_id_10101=True
+
 
 if fix_id_10101 ==False:
     with open('./custom_model_data.txt','r') as file:
@@ -58,13 +66,41 @@ for get_namespace in os.listdir(itemadder):
                 for key in documents['items']:
                     
                     if documents['items'][key]['resource']['generate'] is False:
-                        with open('./Output/assets/'+documents['info']['namespace']+'/models/'+documents['items'][key]['resource']['model_path']+'.json', 'r') as f:
+                        namespace = documents['info']['namespace']
+                        model_path = documents['items'][key]['resource']['model_path']                        
+                        
+                        with open('./Output/assets/'+namespace+'/models/'+model_path+'.json', 'r') as f:
                             data = json.load(f)
+                        
                         for i in data['textures']:
                             alt_dat.append(data['textures'][i])
                         
+     
 
-                        
+                        if documents['items'][key]['resource']['material'] == "BOW":
+                            for tx in ["","_0","_1","_2"]:
+                                with open('./Output/assets/'+namespace+'/models/'+model_path+tx+'.json', 'r') as f:
+                                    data2 = json.load(f)                                
+                                for i in data2['textures']:
+                                    if data2['textures'][i] not in alt_dat:
+                                        alt_dat.append(data2['textures'][i])    
+                            
+                        if documents['items'][key]['resource']['material'] == "CROSSBOW":
+                            for tx in ["","_0","_1","_2","_charged","_firework"]:
+                                with open('./Output/assets/'+namespace+'/models/'+model_path+tx+'.json', 'r') as f:
+                                    data2 = json.load(f)                                
+                                for i in data2['textures']:
+                                    if data2['textures'][i] not in alt_dat:
+                                        alt_dat.append(data2['textures'][i])    
+                       
+                        if documents['items'][key]['resource']['material'] == "FISHING_ROD":
+                            for tx in ["","_cast"]:
+                                with open('./Output/assets/'+namespace+'/models/'+model_path+tx+'.json', 'r') as f:
+                                    data2 = json.load(f)                                
+                                for i in data2['textures']:
+                                    if data2['textures'][i] not in alt_dat:
+                                        alt_dat.append(data2['textures'][i])    
+                       
                         if documents['items'][key]['resource']['material'] not in item_m:
                             item_m[documents['items'][key]['resource']['material']] = []
                         documents['items'][key]['resource']['model_path'] = documents['info']['namespace']+':'+documents['items'][key]['resource']['model_path']
@@ -77,6 +113,7 @@ for get_namespace in os.listdir(itemadder):
                             id=id+1
                     else:
                         if 'material' in documents['items'][key]['resource']:
+                            
                             _met = documents['items'][key]['resource']['material'].lower()
                             data = {}
                             for file in glob.glob("./default_model/**/"+_met+".json", recursive=True):
@@ -100,7 +137,6 @@ for get_namespace in os.listdir(itemadder):
 
              
 
-                    
         alt_dat = sorted(set(alt_dat))
         alt_data = { "sources": [  ]}
         
@@ -134,9 +170,7 @@ for k in item_m:
                 for di in item_m[k]:
                     for kk in di:
                         data['overrides'].append({"predicate": {"custom_model_data": kk }, "model":  di[kk]['resource']['model_path']})
-                        if k == "BOW":
-                            
-
+                        if k == "BOW":                          
                             data['overrides'].append({"predicate": {"custom_model_data": kk ,"pulling": 1}, "model":  di[kk]['resource']['model_path']+"_0"})
                             data['overrides'].append({"predicate": {"custom_model_data": kk ,"pulling": 1,"pull": 0.65}, "model":  di[kk]['resource']['model_path']+"_1"})
                             data['overrides'].append({"predicate": {"custom_model_data": kk ,"pulling": 1,"pull": 0.09}, "model":  di[kk]['resource']['model_path']+"_2"})
@@ -154,17 +188,28 @@ for k in item_m:
                 for i in data["overrides"]:
                     if "custom_model_data" in i["predicate"]:
                         sl[i["predicate"]["custom_model_data"]] = i
+                
                 # slot key sl
-                data["overrides"] = []
-                for i in sorted(sl):
-                    data["overrides"].append(sl[i])
+                # data["overrides"] = []
+                # for i in sorted(sl):
+                #     data["overrides"].append(sl[i])
                 with open('./Output/assets/minecraft/models/item/'+k.lower()+'.json', 'w') as jsonfile:
                     json.dump(data, jsonfile)
+for items in glob.glob("./Output/assets/minecraft/models/item/*.json"):
+    with open(items, 'r') as f:
+        data = json.load(f)
+    _id_max = data['overrides'][-1]['predicate']['custom_model_data']+1
+    data['overrides'].append({ "predicate": { "custom_model_data": _id_max }, "model": "item/"+os.path.basename(items).replace(".json","") })
+    with open(items, 'w') as jsonfile:
+        json.dump(data, jsonfile)
+
 if fix_id_10101 ==False:
     with open('./custom_model_data.txt', 'w') as f:
         id +=1
         f.write(str(id))
-if ec_mode == True:
-    shutil.copy('ec_pack.mcmeta','./Output/pack.mcmeta')
-    shutil.copy('How to get items.txt','./Output/How to get items.txt')
+
+if os.path.isdir('C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output'):
+    shutil.rmtree('C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output')
+shutil.copytree('./Output', 'C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output')
+
 print('Done!')

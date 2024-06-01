@@ -6,12 +6,20 @@ import yaml
 import json
 
 import requests
+import io
+import zipfile
 
 
 if not os.path.exists("./pack.mcmeta"):
     with open('./pack.mcmeta', 'w') as f:
         f.write('{"pack":{"pack_format":15,"description":""}}')
-
+if not os.path.isdir("./default_model"):
+    # https://github.com/kigkosa/convert-Itemadder-to-default-resoure-pack/raw/master/default_model.zip
+    response = requests.get('https://github.com/kigkosa/convert-Itemadder-to-default-resoure-pack/raw/master/default_model.zip')
+    response.raise_for_status()
+    zip_file = io.BytesIO(response.content)
+    with zipfile.ZipFile(zip_file, 'r') as zip_ref:
+        zip_ref.extractall('./')
 
 # gen fonder ia
 if not os.path.isdir('./ItemsAdder'):
@@ -207,9 +215,4 @@ if fix_id_10101 ==False:
     with open('./custom_model_data.txt', 'w') as f:
         id +=1
         f.write(str(id))
-
-if os.path.isdir('C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output'):
-    shutil.rmtree('C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output')
-shutil.copytree('./Output', 'C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output')
-
 print('Done!')

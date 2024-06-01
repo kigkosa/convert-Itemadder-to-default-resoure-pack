@@ -9,6 +9,31 @@ import requests
 import io
 import zipfile
 
+from PIL import Image
+
+def hex_to_rgb(hex_color):
+    # Remove the '#' character if it's there
+    hex_color = hex_color.lstrip('#')
+    
+    # Convert the hex string to RGB tuple
+    rgb = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+    
+    return rgb
+
+def add_img_armor(input_img,output_img):
+    image1 = Image.open(output_img)
+    image2 = Image.open(input_img)
+
+    width1, height1 = image1.size
+    width2, height2 = image2.size
+    max_height = max(height1, height2)
+
+    total_width = width1 + width2 
+
+    combined_image = Image.new('RGBA', (total_width, max_height))
+    combined_image.paste(image1, (0, 0))
+    combined_image.paste(image2, (width1, 0))
+    combined_image.save(output_img)
 
 if not os.path.exists("./pack.mcmeta"):
     with open('./pack.mcmeta', 'w') as f:
@@ -52,7 +77,7 @@ item_m = {}
 id = 0
 
 
-fix_id_10101=False
+fix_id_10101=True
 
 
 if fix_id_10101 ==False:
@@ -142,6 +167,65 @@ for get_namespace in os.listdir(itemadder):
                             # alt_dat.append( documents['info']['namespace']+':'+documents['items'][key]['resource']['textures'][0])
                             for i in documents['items'][key]['resource']['textures']:
                                 alt_dat.append( documents['info']['namespace']+':'+i)
+                        else:
+                            if 'specific_properties' in documents['items'][key]:
+                                if 'armor' in documents['items'][key]['specific_properties']:
+                                    namespace = documents['info']['namespace']
+                                    
+                                    texture_path = documents['items'][key]['resource']['textures'][-1] .replace(".png","")
+                                    alt_dat.append( namespace+":"+texture_path)
+                                    # print(documents['items'][key]['specific_properties']['armor']['slot'])
+                                    _met = documents['items'][key]['specific_properties']['armor']['slot'].lower()
+                                    armor_list = {"head":"leather_helmet","chest":"leather_chestplate","legs":"leather_leggings","feet":"leather_boots"}
+                                    data = {}
+                                    for file in glob.glob("./default_model/**/"+armor_list[_met]+".json", recursive=True):
+                                        with open(file, 'r') as f:
+                                            data = json.load(f)
+                                    icon_json = {"parent": "minecraft:item/generated","textures": {"layer0": "item/empty","layer1": namespace+":"+texture_path}}
+                                    # wite json
+                                    with open('./Output/assets/'+namespace+'/models/'+key+'.json', 'w') as jsonfile:
+                                        json.dump(icon_json, jsonfile)
+                                    if 'overrides' not in data:
+                                        data['overrides'] = []
+                                    data['overrides'].append({"predicate": {"custom_model_data": id }, "model":  namespace+":"+key})
+                                    id=id+1
+                                    # red and edit file
+                                    with open('./Output/assets/minecraft/models/item/'+armor_list[_met]+'.json', 'w') as jsonfile:
+                                        json.dump(data, jsonfile)
+                                    if not os.path.exists("./Output/assets/minecraft/textures"):
+                                        os.makedirs("./Output/assets/minecraft/textures")
+                                    if not os.path.exists("./Output/assets/minecraft/textures/item"):
+                                        os.makedirs("./Output/assets/minecraft/textures/item")
+                                        shutil.copy("./default_model/textures/item/empty.png","./Output/assets/minecraft/textures/item")
+                                    if not os.path.exists("./Output/assets/minecraft/textures/models/armor"):                                        
+                                        shutil.copytree("./default_model/textures/models/armor","./Output/assets/minecraft/textures/models/armor")
+                                    if 'chest' ==_met:
+                                        _layer_1 =documents['armors_rendering'][documents['items'][key]['specific_properties']['armor']['custom_armor']]['layer_1']
+                                        _layer_2 =documents['armors_rendering'][documents['items'][key]['specific_properties']['armor']['custom_armor']]['layer_2']
+                                        _color=documents['armors_rendering'][documents['items'][key]['specific_properties']['armor']['custom_armor']]['color']
+                                        
+                                        img = Image.open(itemadder+'/'+get_namespace+"/resourcepack/assets/"+namespace+"/textures/"+_layer_1+".png")
+                                        pixels = img.load()
+                                        pixels[0,0] = hex_to_rgb(_color)
+                                        if not os.path.exists("./Output/tmp/armors"):
+                                            os.makedirs("./Output/tmp/armors")                                 
+                                        img.save("./Output/tmp/armors/"+os.path.basename(_layer_1)+".png")
+                                        add_img_armor("./Output/tmp/armors/"+os.path.basename(_layer_1)+".png","./Output/assets/minecraft/textures/models/armor/leather_layer_1.png")
+
+                                        
+                                        img = Image.open(itemadder+'/'+get_namespace+"/resourcepack/assets/"+namespace+"/textures/"+_layer_2+".png")
+                                        pixels = img.load()
+                                        pixels[0,0] = hex_to_rgb(_color)
+                                        if not os.path.exists("./Output/tmp/armors"):
+                                            os.makedirs("./Output/tmp/armors")                                 
+                                        img.save("./Output/tmp/armors/"+os.path.basename(_layer_2)+".png")
+                                        add_img_armor("./Output/tmp/armors/"+os.path.basename(_layer_2)+".png","./Output/assets/minecraft/textures/models/armor/leather_layer_2.png")
+                                        
+                                        if not os.path.exists("./Output/assets/minecraft/shaders"):
+                                            shutil.copytree("./default_model/shaders", "./Output/assets/minecraft/shaders")
+
+                                    
+
 
              
 
@@ -215,4 +299,13 @@ if fix_id_10101 ==False:
     with open('./custom_model_data.txt', 'w') as f:
         id +=1
         f.write(str(id))
+if os.path.exists("./Output/tmp"):
+    shutil.rmtree("./Output/tmp")
+# if os.path.exists("C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output"):
+#     shutil.rmtree("C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output")
+# shutil.copytree('./Output', 'C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output')    
+
+
+
+
 print('Done!')

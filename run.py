@@ -201,7 +201,7 @@ for get_namespace in os.listdir(itemadder):
                                     if 'overrides' not in data:
                                         data['overrides'] = []
                                     _color=documents['armors_rendering'][documents['items'][key]['specific_properties']['armor']['custom_armor']]['color']              
-                                    list_give_items.append(namespace+":"+key+"  |  /minecraft:give @p minecraft:"+armor_list[_met].lower()+"{CustomModelData:"+str(id)+",display:{Name:'[{\"text\":\""+documents['items'][key]["display_name"]+"\",\"italic\":false}]'},color:"+hex_to_dec(_color)+"}")
+                                    list_give_items.append(namespace+":"+key+"  |  /minecraft:give @p minecraft:"+armor_list[_met].lower()+"{CustomModelData:"+str(id)+",display:{Name:'[{\"text\":\""+documents['items'][key]["display_name"]+"\",\"italic\":false}]',color:"+hex_to_dec(_color)+"}}")
                                     data['overrides'].append({"predicate": {"custom_model_data": id }, "model":  namespace+":"+key})
                                     id=id+1                                   
                                     
@@ -339,7 +339,6 @@ with open('./Output/give_items.txt', 'w') as f:
 if os.path.exists("C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output"):
     shutil.rmtree("C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output")
 shutil.copytree('./Output', 'C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output')    
-
 
 
 print('Done!')

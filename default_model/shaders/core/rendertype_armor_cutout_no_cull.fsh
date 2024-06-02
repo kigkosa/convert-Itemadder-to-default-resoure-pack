@@ -3,7 +3,7 @@
 #moj_import <fog.glsl>
 #moj_import <light.glsl>
 
-#define TEX_RES 16
+#define TEX_RES 32
 #define ANIM_SPEED 50 // Runs every 24 seconds
 #define IS_LEATHER_LAYER texelFetch(Sampler0, ivec2(0, 1), 0) == vec4(1) // If it's leather_layer_X.png texture
 

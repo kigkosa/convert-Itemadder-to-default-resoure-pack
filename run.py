@@ -31,6 +31,9 @@ def add_img_armor(input_img,output_img):
     width1, height1 = image1.size
     width2, height2 = image2.size
     max_height = max(height1, height2)
+    if height1 < height2:        
+        image1 = image1.resize(((width2*2), height2))
+    width1, height1 = image1.size
 
     total_width = width1 + width2 
 
@@ -225,16 +228,21 @@ for get_namespace in os.listdir(itemadder):
                                         _layer_2 =documents['armors_rendering'][documents['items'][key]['specific_properties']['armor']['custom_armor']]['layer_2']
                                         _color=documents['armors_rendering'][documents['items'][key]['specific_properties']['armor']['custom_armor']]['color']
                                         
-                                        img = Image.open(itemadder+'/'+get_namespace+"/resourcepack/assets/"+namespace+"/textures/"+_layer_1+".png")
-                                        pixels = img.load()
-                                        pixels[0,0] = hex_to_rgb(_color)
                                         if not os.path.exists("./Output/tmp/armors"):
-                                            os.makedirs("./Output/tmp/armors")                                 
+                                            os.makedirs("./Output/tmp/armors")       
+
+
+                                        img = Image.open(itemadder+'/'+get_namespace+"/resourcepack/assets/"+namespace+"/textures/"+_layer_1+".png")
+                                        img = img.convert("RGBA")
+                                        pixels = img.load()
+                                        # print(hex_to_rgb(_color))
+                                        pixels[0,0] = hex_to_rgb(_color)
                                         img.save("./Output/tmp/armors/"+os.path.basename(_layer_1)+".png")
                                         add_img_armor("./Output/tmp/armors/"+os.path.basename(_layer_1)+".png","./Output/assets/minecraft/textures/models/armor/leather_layer_1.png")
 
                                         
                                         img = Image.open(itemadder+'/'+get_namespace+"/resourcepack/assets/"+namespace+"/textures/"+_layer_2+".png")
+                                        img = img.convert("RGBA")
                                         pixels = img.load()
                                         pixels[0,0] = hex_to_rgb(_color)
                                         if not os.path.exists("./Output/tmp/armors"):
@@ -244,6 +252,7 @@ for get_namespace in os.listdir(itemadder):
                                         
                                         if not os.path.exists("./Output/assets/minecraft/shaders"):
                                             shutil.copytree("./default_model/shaders", "./Output/assets/minecraft/shaders")
+                            
 
                                     
 
@@ -327,9 +336,9 @@ with open('./Output/give_items.txt', 'w') as f:
     for i in list_give_items:
         f.write(i+'\n\n')
 
-# if os.path.exists("C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output"):
-#     shutil.rmtree("C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output")
-# shutil.copytree('./Output', 'C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output')    
+if os.path.exists("C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output"):
+    shutil.rmtree("C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output")
+shutil.copytree('./Output', 'C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output')    
 
 
 

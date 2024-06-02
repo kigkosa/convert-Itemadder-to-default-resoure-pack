@@ -19,6 +19,10 @@ def hex_to_rgb(hex_color):
     rgb = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
     
     return rgb
+def hex_to_dec(hex_color):
+    hex_color = hex_color.lstrip('#')
+    return str(int(hex_color, 16))
+
 
 def add_img_armor(input_img,output_img):
     image1 = Image.open(output_img)
@@ -79,7 +83,7 @@ id = 0
 
 fix_id_10101=True
 
-
+list_give_items = []
 if fix_id_10101 ==False:
     with open('./custom_model_data.txt','r') as file:
         id = int(file.read())
@@ -100,7 +104,8 @@ for get_namespace in os.listdir(itemadder):
                     
                     if documents['items'][key]['resource']['generate'] is False:
                         namespace = documents['info']['namespace']
-                        model_path = documents['items'][key]['resource']['model_path']                        
+                        model_path = documents['items'][key]['resource']['model_path']
+
                         
                         with open('./Output/assets/'+namespace+'/models/'+model_path+'.json', 'r') as f:
                             data = json.load(f)
@@ -140,9 +145,12 @@ for get_namespace in os.listdir(itemadder):
                         
                         if 'model_id' in documents['items'][key]['resource'] :
                             item_m[documents['items'][key]['resource']['material']].append({ documents['items'][key]['resource']['model_id']:documents['items'][key]})
+                            list_give_items.append(namespace+":"+model_path+"  |  /minecraft:give @p minecraft:"+documents['items'][key]['resource']['material'].lower()+"{CustomModelData:"+str(documents['items'][key]['resource']['model_id'])+",display:{Name:'[{\"text\":\""+documents['items'][key]["display_name"]+"\",\"italic\":false}]'}}")
                             
                         else:
                             item_m[documents['items'][key]['resource']['material']].append({ id:documents['items'][key]})
+                            list_give_items.append(namespace+":"+model_path+"  |  /minecraft:give @p minecraft:"+documents['items'][key]['resource']['material'].lower()+"{CustomModelData:"+str(id)+",display:{Name:'[{\"text\":\""+documents['items'][key]["display_name"]+"\",\"italic\":false}]'}}")                        
+
                             id=id+1
                     else:
                         if 'material' in documents['items'][key]['resource']:
@@ -161,8 +169,10 @@ for get_namespace in os.listdir(itemadder):
                                 item_m[documents['items'][key]['resource']['material']] = []
                             if documents['items'][key]['resource']['model_id'] is not None:
                                 item_m[documents['items'][key]['resource']['material']].append({ documents['items'][key]['resource']['model_id']:documents['items'][key]})
+                                list_give_items.append(namespace+":"+model_path+"  |  /minecraft:give @p minecraft:"+documents['items'][key]['resource']['material'].lower()+"{CustomModelData:"+str(documents['items'][key]['resource']['model_id'])+",display:{Name:'[{\"text\":\""+documents['items'][key]["display_name"]+"\",\"italic\":false}]'}}")
                             else:                            
                                 item_m[documents['items'][key]['resource']['material']].append({ id:documents['items'][key]})
+                                list_give_items.append(namespace+":"+model_path+"  |  /minecraft:give @p minecraft:"+documents['items'][key]['resource']['material'].lower()+"{CustomModelData:"+str(id)+",display:{Name:'[{\"text\":\""+documents['items'][key]["display_name"]+"\",\"italic\":false}]'}}")
                                 id=id+1
                             # alt_dat.append( documents['info']['namespace']+':'+documents['items'][key]['resource']['textures'][0])
                             for i in documents['items'][key]['resource']['textures']:
@@ -187,8 +197,17 @@ for get_namespace in os.listdir(itemadder):
                                         json.dump(icon_json, jsonfile)
                                     if 'overrides' not in data:
                                         data['overrides'] = []
+                                    _color=documents['armors_rendering'][documents['items'][key]['specific_properties']['armor']['custom_armor']]['color']              
+                                    list_give_items.append(namespace+":"+key+"  |  /minecraft:give @p minecraft:"+armor_list[_met].lower()+"{CustomModelData:"+str(id)+",display:{Name:'[{\"text\":\""+documents['items'][key]["display_name"]+"\",\"italic\":false}]'},color:"+hex_to_dec(_color)+"}")
                                     data['overrides'].append({"predicate": {"custom_model_data": id }, "model":  namespace+":"+key})
-                                    id=id+1
+                                    id=id+1                                   
+                                    
+                                
+                                    
+                                    
+                                    
+                                    
+
                                     # red and edit file
                                     with open('./Output/assets/minecraft/models/item/'+armor_list[_met]+'.json', 'w') as jsonfile:
                                         json.dump(data, jsonfile)
@@ -199,6 +218,8 @@ for get_namespace in os.listdir(itemadder):
                                         shutil.copy("./default_model/textures/item/empty.png","./Output/assets/minecraft/textures/item")
                                     if not os.path.exists("./Output/assets/minecraft/textures/models/armor"):                                        
                                         shutil.copytree("./default_model/textures/models/armor","./Output/assets/minecraft/textures/models/armor")
+                                    
+                                    
                                     if 'chest' ==_met:
                                         _layer_1 =documents['armors_rendering'][documents['items'][key]['specific_properties']['armor']['custom_armor']]['layer_1']
                                         _layer_2 =documents['armors_rendering'][documents['items'][key]['specific_properties']['armor']['custom_armor']]['layer_2']
@@ -301,10 +322,14 @@ if fix_id_10101 ==False:
         f.write(str(id))
 if os.path.exists("./Output/tmp"):
     shutil.rmtree("./Output/tmp")
+# list_give_items to text
+with open('./Output/give_items.txt', 'w') as f:
+    for i in list_give_items:
+        f.write(i+'\n\n')
+
 # if os.path.exists("C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output"):
 #     shutil.rmtree("C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output")
 # shutil.copytree('./Output', 'C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output')    
-
 
 
 

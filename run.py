@@ -335,10 +335,12 @@ if os.path.exists("./Output/tmp"):
 with open('./Output/give_items.txt', 'w') as f:
     for i in list_give_items:
         f.write(i+'\n\n')
-
-# if os.path.exists("C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output"):
-#     shutil.rmtree("C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output")
-# shutil.copytree('./Output', 'C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output')    
+with open('./Output/give_items_1_20_6.txt', 'w') as f:
+    for i in list_give_items_1_20_6:
+        f.write(i+'\n\n')
+if os.path.exists("C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.6/.minecraft/resourcepacks/Output"):
+    shutil.rmtree("C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.6/.minecraft/resourcepacks/Output")
+shutil.copytree('./Output', 'C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.6/.minecraft/resourcepacks/Output')    
 
 
 print('Done!')

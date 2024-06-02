@@ -44,7 +44,7 @@ def add_img_armor(input_img,output_img):
 
 if not os.path.exists("./pack.mcmeta"):
     with open('./pack.mcmeta', 'w') as f:
-        f.write('{"pack":{"pack_format":15,"description":""}}')
+        f.write('{"pack":{"pack_format":15,"supported_formats": {"min_inclusive": 16, "max_inclusive": 24},"description":""}}')
 if not os.path.isdir("./default_model"):
     # https://github.com/kigkosa/convert-Itemadder-to-default-resoure-pack/raw/master/default_model.zip
     response = requests.get('https://github.com/kigkosa/convert-Itemadder-to-default-resoure-pack/raw/master/default_model.zip')

@@ -28,11 +28,11 @@ flat out vec4 texel;
 
 void main() {
     vNormal = Normal;
-    texel = texelFetch(Sampler2, UV2 / 32, 0);
+    texel = texelFetch(Sampler2, UV2 / 16, 0);
     gl_Position = ProjMat * ModelViewMat * vec4(Position, 1.0);
 
     vertexDistance = length((ModelViewMat * vec4(Position, 1.0)).xyz);
-    vertexColor = minecraft_mix_light(Light0_Direction, Light1_Direction, Normal, Color) * texelFetch(Sampler2, UV2 / 32, 0);
+    vertexColor = minecraft_mix_light(Light0_Direction, Light1_Direction, Normal, Color) * texelFetch(Sampler2, UV2 / 16, 0);
     tint = Color;
     texCoord0 = UV0;
     texCoord1 = UV1;

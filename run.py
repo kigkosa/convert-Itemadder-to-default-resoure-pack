@@ -31,9 +31,21 @@ def add_img_armor(input_img,output_img):
     width1, height1 = image1.size
     width2, height2 = image2.size
     max_height = max(height1, height2)
-    if height1 < height2:        
-        image1 = image1.resize(((width2*2), height2))
+    # if height1 < height2:        
+    #     image1 = image1.resize(((width2*2), height2))
+    if height2 < height1:        
+        # image1 = Image.open()
+        image1 = Image.open("./default_model/textures/models/armor_16/"+os.path.basename(output_img))
+        max_height = min(height1, height2)
+        with open('./Output/assets/minecraft/shaders/core/rendertype_armor_cutout_no_cull.fsh', 'r') as f:
+            shader = f.read()
+        shader = shader.replace("#define TEX_RES 32","#define TEX_RES 16")
+        with open('./Output/assets/minecraft/shaders/core/rendertype_armor_cutout_no_cull.fsh', 'w') as f:
+            f.write(shader)
+            
     width1, height1 = image1.size
+    width2, height2 = image2.size
+
 
     total_width = width1 + width2 
 
@@ -87,6 +99,7 @@ id = 0
 fix_id_10101=True
 
 list_give_items = []
+list_give_items_1_20_6 = []
 if fix_id_10101 ==False:
     with open('./custom_model_data.txt','r') as file:
         id = int(file.read())
@@ -149,10 +162,13 @@ for get_namespace in os.listdir(itemadder):
                         if 'model_id' in documents['items'][key]['resource'] :
                             item_m[documents['items'][key]['resource']['material']].append({ documents['items'][key]['resource']['model_id']:documents['items'][key]})
                             list_give_items.append(namespace+":"+model_path+"  |  /minecraft:give @p minecraft:"+documents['items'][key]['resource']['material'].lower()+"{CustomModelData:"+str(documents['items'][key]['resource']['model_id'])+",display:{Name:'[{\"text\":\""+documents['items'][key]["display_name"]+"\",\"italic\":false}]'}}")
+                            list_give_items_1_20_6.append(namespace+":"+model_path+"  |  /minecraft:give @p minecraft:"+documents['items'][key]['resource']['material'].lower()+"[custom_model_data="+str(documents['items'][key]['resource']['model_id'])+",custom_name='{\"text\":\""+documents['items'][key]["display_name"]+"\",\"italic\":false}']")
                             
                         else:
                             item_m[documents['items'][key]['resource']['material']].append({ id:documents['items'][key]})
-                            list_give_items.append(namespace+":"+model_path+"  |  /minecraft:give @p minecraft:"+documents['items'][key]['resource']['material'].lower()+"{CustomModelData:"+str(id)+",display:{Name:'[{\"text\":\""+documents['items'][key]["display_name"]+"\",\"italic\":false}]'}}")                        
+                            list_give_items.append(namespace+":"+model_path+"  |  /minecraft:give @p minecraft:"+documents['items'][key]['resource']['material'].lower()+"{CustomModelData:"+str(id)+",display:{Name:'[{\"text\":\""+documents['items'][key]["display_name"]+"\",\"italic\":false}]'}}")
+                            list_give_items_1_20_6.append(namespace+":"+model_path+"  |  /minecraft:give @p minecraft:"+documents['items'][key]['resource']['material'].lower()+"[custom_model_data="+str(id)+", custom_name='{\"text\":\""+documents['items'][key]["display_name"]+"\", \"italic\":false}']")
+                     
 
                             id=id+1
                     else:
@@ -173,9 +189,11 @@ for get_namespace in os.listdir(itemadder):
                             if documents['items'][key]['resource']['model_id'] is not None:
                                 item_m[documents['items'][key]['resource']['material']].append({ documents['items'][key]['resource']['model_id']:documents['items'][key]})
                                 list_give_items.append(namespace+":"+model_path+"  |  /minecraft:give @p minecraft:"+documents['items'][key]['resource']['material'].lower()+"{CustomModelData:"+str(documents['items'][key]['resource']['model_id'])+",display:{Name:'[{\"text\":\""+documents['items'][key]["display_name"]+"\",\"italic\":false}]'}}")
+                                list_give_items_1_20_6.append(namespace+":"+model_path+"  |  /minecraft:give @p minecraft:"+documents['items'][key]['resource']['material'].lower()+"[custom_model_data="+str(documents['items'][key]['resource']['model_id'])+", custom_name='{\"text\":\""+documents['items'][key]["display_name"]+"\", \"italic\":false}']")
                             else:                            
                                 item_m[documents['items'][key]['resource']['material']].append({ id:documents['items'][key]})
                                 list_give_items.append(namespace+":"+model_path+"  |  /minecraft:give @p minecraft:"+documents['items'][key]['resource']['material'].lower()+"{CustomModelData:"+str(id)+",display:{Name:'[{\"text\":\""+documents['items'][key]["display_name"]+"\",\"italic\":false}]'}}")
+                                list_give_items_1_20_6.append(namespace+":"+model_path+"  |  /minecraft:give @p minecraft:"+documents['items'][key]['resource']['material'].lower()+"[custom_model_data="+str(id)+", custom_name='{\"text\":\""+documents['items'][key]["display_name"]+"\", \"italic\":false}']")
                                 id=id+1
                             # alt_dat.append( documents['info']['namespace']+':'+documents['items'][key]['resource']['textures'][0])
                             for i in documents['items'][key]['resource']['textures']:
@@ -202,6 +220,7 @@ for get_namespace in os.listdir(itemadder):
                                         data['overrides'] = []
                                     _color=documents['armors_rendering'][documents['items'][key]['specific_properties']['armor']['custom_armor']]['color']              
                                     list_give_items.append(namespace+":"+key+"  |  /minecraft:give @p minecraft:"+armor_list[_met].lower()+"{CustomModelData:"+str(id)+",display:{Name:'[{\"text\":\""+documents['items'][key]["display_name"]+"\",\"italic\":false}]',color:"+hex_to_dec(_color)+"}}")
+                                    list_give_items_1_20_6.append(namespace+":"+key+"  |  /minecraft:give @p minecraft:"+armor_list[_met].lower()+"[custom_model_data="+str(id)+", custom_name='{\"text\":\""+documents['items'][key]["display_name"]+"\", \"italic\":false}',dyed_color={rgb:"+hex_to_dec(_color)+"}]")
                                     data['overrides'].append({"predicate": {"custom_model_data": id }, "model":  namespace+":"+key})
                                     id=id+1                                   
                                     
@@ -230,7 +249,8 @@ for get_namespace in os.listdir(itemadder):
                                         
                                         if not os.path.exists("./Output/tmp/armors"):
                                             os.makedirs("./Output/tmp/armors")       
-
+                                        if not os.path.exists("./Output/assets/minecraft/shaders"):
+                                            shutil.copytree("./default_model/shaders", "./Output/assets/minecraft/shaders")
 
                                         img = Image.open(itemadder+'/'+get_namespace+"/resourcepack/assets/"+namespace+"/textures/"+_layer_1+".png")
                                         img = img.convert("RGBA")
@@ -250,8 +270,7 @@ for get_namespace in os.listdir(itemadder):
                                         img.save("./Output/tmp/armors/"+os.path.basename(_layer_2)+".png")
                                         add_img_armor("./Output/tmp/armors/"+os.path.basename(_layer_2)+".png","./Output/assets/minecraft/textures/models/armor/leather_layer_2.png")
                                         
-                                        if not os.path.exists("./Output/assets/minecraft/shaders"):
-                                            shutil.copytree("./default_model/shaders", "./Output/assets/minecraft/shaders")
+
                             
 
                                     
@@ -338,9 +357,8 @@ with open('./Output/give_items.txt', 'w') as f:
 with open('./Output/give_items_1_20_6.txt', 'w') as f:
     for i in list_give_items_1_20_6:
         f.write(i+'\n\n')
-if os.path.exists("C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.6/.minecraft/resourcepacks/Output"):
-    shutil.rmtree("C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.6/.minecraft/resourcepacks/Output")
-shutil.copytree('./Output', 'C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.6/.minecraft/resourcepacks/Output')    
-
+# if os.path.exists("C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output"):
+#     shutil.rmtree("C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output")
+# shutil.copytree('./Output', 'C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output')    
 
 print('Done!')

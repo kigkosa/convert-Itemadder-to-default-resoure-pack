@@ -336,9 +336,9 @@ with open('./Output/give_items.txt', 'w') as f:
     for i in list_give_items:
         f.write(i+'\n\n')
 
-if os.path.exists("C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output"):
-    shutil.rmtree("C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output")
-shutil.copytree('./Output', 'C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output')    
+# if os.path.exists("C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output"):
+#     shutil.rmtree("C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output")
+# shutil.copytree('./Output', 'C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output')    
 
 
 print('Done!')

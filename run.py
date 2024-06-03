@@ -22,22 +22,21 @@ def generate_random_unused_unicode():
     
     return unicode_char
 
-# BUG แก้ไขให้อ่านเป็น yml
 def font_image_unicode(name):
     list_unicode = []
     with open("./storage/font_images_unicode_cache.yml", 'r', encoding='utf-8') as file:
-        history = file.readlines()
-    for his in history:
-        if his.find(name)>=0:
-            return his.split(":")[-1].replace("\n","").strip()
-        list_unicode.append(his.split(":")[-1])
-    
+        history = yaml.safe_load(file)
+    if history != None:
+        for his in history:
+            if his == name:
+                return history[his]
+            list_unicode.append(history[his])
     unicode = generate_random_unused_unicode()
     while unicode in list_unicode:
         unicode = generate_random_unused_unicode()
     with open("./storage/font_images_unicode_cache.yml", 'a', encoding='utf-8') as file:
-        file.write("\n"+name+": "+unicode+"")
-    return unicode.replace("\n","").strip()
+        yaml.dump({name:unicode}, file, sort_keys=False,allow_unicode=True)
+    return unicode
 
 
 def item_get_cmdata(type:str,name:str):
@@ -106,10 +105,14 @@ def add_img_armor(input_img,output_img):
 
 if not os.path.exists("./storage"):
     os.mkdir("./storage")
+if not os.path.exists("./storage/font_images_unicode_cache.yml"):
     with open('./storage/font_images_unicode_cache.yml', 'w', encoding='utf-8') as f:
         f.write('')
+if not os.path.exists("./storage/items_cache.yml"):
     with open('./storage/items_cache.yml', 'w', encoding='utf-8') as f:
         f.write('')
+
+
 
 if not os.path.exists("./pack.mcmeta"):
     with open('./pack.mcmeta', 'w') as f:
@@ -127,15 +130,6 @@ if not os.path.isdir('./ItemsAdder'):
     os.mkdir('./ItemsAdder') 
     os.mkdir('./ItemsAdder/contents') 
     exit()
-
-
-
-# check file and gen file
-if not os.path.exists("./custom_model_data.txt"):
-    with open('./custom_model_data.txt','w') as f:
-        f.write('0')
-
-
 
 # gen fonder output
 if os.path.isdir('./Output'):
@@ -445,8 +439,12 @@ if json_fonts["providers"] != []:
 
 if len(os.listdir("./Output/assets/minecraft")) == 0:
     shutil.rmtree("./Output/assets/minecraft")
-if os.path.exists("C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output"):
-    shutil.rmtree("C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output")
-shutil.copytree('./Output', 'C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output')    
+
+
+
+
+# if os.path.exists("C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output"):
+#     shutil.rmtree("C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output")
+# shutil.copytree('./Output', 'C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output')    
 
 print('Done!')

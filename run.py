@@ -22,6 +22,7 @@ def generate_random_unused_unicode():
     
     return unicode_char
 
+# BUG แก้ไขให้อ่านเป็น yml
 def font_image_unicode(name):
     list_unicode = []
     with open("./storage/font_images_unicode_cache.yml", 'r', encoding='utf-8') as file:
@@ -37,6 +38,28 @@ def font_image_unicode(name):
     with open("./storage/font_images_unicode_cache.yml", 'a', encoding='utf-8') as file:
         file.write("\n"+name+": "+unicode+"")
     return unicode.replace("\n","").strip()
+
+
+def item_get_id(type:str,name:str):
+    # read yml
+    _custommodeldata = 10101
+    history = {}
+    with open("./storage/items_cache.yml", 'r', encoding='utf-8') as file:
+        history = yaml.safe_load(file)
+    if type.upper() in history:
+        if name in history[type.upper()]:
+            return int(history[type.upper()][name])
+        else:
+            # _custommodeldata = history[type.upper()][list(history[type.upper()])[-1]]+1
+            _custommodeldata = max(history[type.upper()].values())+1
+            print(_custommodeldata)
+            history[type.upper()][name] = _custommodeldata
+    else:
+        history[type.upper()] = {name+": "+_custommodeldata}
+    with open("./storage/items_cache.yml", 'w', encoding='utf-8') as file:
+        yaml.dump(history, file,sort_keys=False)
+    
+        
 
 def hex_to_rgb(hex_color):
     # Remove the '#' character if it's there
@@ -80,7 +103,6 @@ def add_img_armor(input_img,output_img):
     combined_image.paste(image1, (0, 0))
     combined_image.paste(image2, (width1, 0))
     combined_image.save(output_img)
-
 
 
 if not os.path.exists("./storage"):
@@ -142,6 +164,9 @@ if fix_id_10101 ==False:
         id = int(file.read())
 else:
     id = 10101
+
+
+    
 alt_dat = []
 json_fonts = {"providers": []}
 txt_fonts = []

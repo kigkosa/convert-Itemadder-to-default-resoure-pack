@@ -40,7 +40,7 @@ def font_image_unicode(name):
     return unicode.replace("\n","").strip()
 
 
-def item_get_id(type:str,name:str):
+def item_get_cmdata(type:str,name:str):
     # read yml
     _custommodeldata = 10101
     history = {}
@@ -50,14 +50,13 @@ def item_get_id(type:str,name:str):
         if name in history[type.upper()]:
             return int(history[type.upper()][name])
         else:
-            # _custommodeldata = history[type.upper()][list(history[type.upper()])[-1]]+1
             _custommodeldata = max(history[type.upper()].values())+1
-            print(_custommodeldata)
             history[type.upper()][name] = _custommodeldata
     else:
-        history[type.upper()] = {name+": "+_custommodeldata}
+        history[type.upper()] = {name:_custommodeldata}
     with open("./storage/items_cache.yml", 'w', encoding='utf-8') as file:
         yaml.dump(history, file,sort_keys=False)
+    return int(_custommodeldata)
     
         
 
@@ -152,21 +151,15 @@ if not os.path.isdir('./Output'):
 
 itemadder = './ItemsAdder/contents'
 item_m = {}
-id = 0
+id = 10101
 
 
-fix_id_10101=True
+fix_id_10101=False
 
 list_give_items = []
 list_give_items_1_20_6 = []
-if fix_id_10101 ==False:
-    with open('./custom_model_data.txt','r') as file:
-        id = int(file.read())
-else:
-    id = 10101
 
 
-    
 alt_dat = []
 json_fonts = {"providers": []}
 txt_fonts = []
@@ -203,6 +196,10 @@ for get_namespace in os.listdir(itemadder):
                 for key in documents['items']:
                     
                     if documents['items'][key]['resource']['generate'] is False:
+
+                        if fix_id_10101 == False:
+                            id = item_get_cmdata(documents['items'][key]['resource']['material'],namespace+":"+key)
+
                         model_path = documents['items'][key]['resource']['model_path']
 
                         
@@ -257,6 +254,8 @@ for get_namespace in os.listdir(itemadder):
                     else:
                         if 'material' in documents['items'][key]['resource']:
                             
+                            if fix_id_10101 == False:
+                                id = item_get_cmdata(documents['items'][key]['resource']['material'],namespace+":"+key)
                             _met = documents['items'][key]['resource']['material'].lower()
                             data = {}
                             for file in glob.glob("./default_model/**/"+_met+".json", recursive=True):
@@ -285,13 +284,14 @@ for get_namespace in os.listdir(itemadder):
                             if 'specific_properties' in documents['items'][key]:
                                 if 'armor' in documents['items'][key]['specific_properties']:
                                     namespace = documents['info']['namespace']
-                                    
-                                    texture_path = documents['items'][key]['resource']['textures'][-1] .replace(".png","")
-                                    alt_dat.append( namespace+":"+texture_path)
-                                    # print(documents['items'][key]['specific_properties']['armor']['slot'])
                                     _met = documents['items'][key]['specific_properties']['armor']['slot'].lower()
                                     armor_list = {"head":"leather_helmet","chest":"leather_chestplate","legs":"leather_leggings","feet":"leather_boots"}
                                     data = {}
+                                    if fix_id_10101 == False:
+                                        id = item_get_cmdata(armor_list[_met],namespace+":"+key)                                    
+                                    texture_path = documents['items'][key]['resource']['textures'][-1] .replace(".png","")
+                                    alt_dat.append( namespace+":"+texture_path)
+                                    # print(documents['items'][key]['specific_properties']['armor']['slot'])
                                     for file in glob.glob("./default_model/**/"+armor_list[_met]+".json", recursive=True):
                                         with open(file, 'r') as f:
                                             data = json.load(f)
@@ -422,10 +422,6 @@ for items in glob.glob("./Output/assets/minecraft/models/item/*.json"):
     with open(items, 'w') as jsonfile:
         json.dump(data, jsonfile)
 
-if fix_id_10101 ==False:
-    with open('./custom_model_data.txt', 'w') as f:
-        id +=1
-        f.write(str(id))
 if os.path.exists("./Output/tmp"):
     shutil.rmtree("./Output/tmp")
 # list_give_items to text

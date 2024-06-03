@@ -11,6 +11,33 @@ import zipfile
 
 from PIL import Image
 
+import random
+
+def generate_random_unused_unicode():
+    # Generate a random integer within a range of less common Unicode characters
+    code_point = random.randint(0xE000, 0xF8FF)
+    
+    # Convert the integer to a Unicode character
+    unicode_char = chr(code_point)
+    
+    return unicode_char
+
+def font_image_unicode(name):
+    list_unicode = []
+    with open("./storage/font_images_unicode_cache.yml", 'r', encoding='utf-8') as file:
+        history = file.readlines()
+    for his in history:
+        if his.find(name)>=0:
+            return his.split(":")[-1].replace("\n","").strip()
+        list_unicode.append(his.split(":")[-1])
+    
+    unicode = generate_random_unused_unicode()
+    while unicode in list_unicode:
+        unicode = generate_random_unused_unicode()
+    with open("./storage/font_images_unicode_cache.yml", 'a', encoding='utf-8') as file:
+        file.write("\n"+name+": "+unicode+"")
+    return unicode.replace("\n","").strip()
+
 def hex_to_rgb(hex_color):
     # Remove the '#' character if it's there
     hex_color = hex_color.lstrip('#')
@@ -54,6 +81,15 @@ def add_img_armor(input_img,output_img):
     combined_image.paste(image2, (width1, 0))
     combined_image.save(output_img)
 
+
+
+if not os.path.exists("./storage"):
+    os.mkdir("./storage")
+    with open('./storage/font_images_unicode_cache.yml', 'w', encoding='utf-8') as f:
+        f.write('')
+    with open('./storage/items_cache.yml', 'w', encoding='utf-8') as f:
+        f.write('')
+
 if not os.path.exists("./pack.mcmeta"):
     with open('./pack.mcmeta', 'w') as f:
         f.write('{"pack":{"pack_format":16,"supported_formats": {"min_inclusive": 16, "max_inclusive": 24},"description":""}}')
@@ -78,6 +114,8 @@ if not os.path.exists("./custom_model_data.txt"):
     with open('./custom_model_data.txt','w') as f:
         f.write('0')
 
+
+
 # gen fonder output
 if os.path.isdir('./Output'):
     shutil.rmtree('./Output')
@@ -86,8 +124,7 @@ if not os.path.isdir('./Output'):
     os.mkdir('./Output/assets') 
     shutil.copyfile('./pack.mcmeta','./Output/pack.mcmeta')
     os.mkdir('./Output/assets/minecraft') 
-    os.mkdir('./Output/assets/minecraft/models') 
-    os.mkdir('./Output/assets/minecraft/models/item') 
+
     
 
 
@@ -106,20 +143,41 @@ if fix_id_10101 ==False:
 else:
     id = 10101
 alt_dat = []
+json_fonts = {"providers": []}
+txt_fonts = []
+
 for get_namespace in os.listdir(itemadder):
+    if os.path.exists(f"{itemadder}/{get_namespace}/resourcepack/assets/minecraft"):
+        if os.path.exists("./Output/assets/minecraft"):
+            shutil.rmtree("./Output/assets/minecraft")
+        shutil.copytree(f"{itemadder}/{get_namespace}/resourcepack/assets/minecraft", f"./Output/assets/minecraft")
     for get_file in os.listdir(itemadder+"/"+get_namespace+"/configs"):
 
 
         with open(itemadder+"/"+get_namespace+"/configs"+"/"+get_file) as file:
             documents = yaml.full_load(file)
+            namespace = documents['info']['namespace']
+
             if not os.path.exists('./Output/assets/'+documents['info']['namespace']):
                 shutil.copytree(itemadder+'/'+get_namespace+"/resourcepack/assets/"+documents['info']['namespace'],'./Output/assets/'+documents['info']['namespace'])
+            
+            if 'font_images' in documents:
+                for font_image in documents["font_images"]:
+                    _unicode = font_image_unicode(namespace+":"+font_image)
+                    json_fonts["providers"].append({
+                        "file": namespace+":"+documents["font_images"][font_image]["path"],
+                        "chars": [str(_unicode)],      
+                        "height": documents["font_images"][font_image]["scale_ratio"],
+                        "ascent": documents["font_images"][font_image]["y_position"],
+                        "type": "bitmap"
+                    })
+                    txt_fonts.append(str(namespace+":"+font_image+": "+_unicode))
+
             if  'items' in documents: 
                 
                 for key in documents['items']:
                     
                     if documents['items'][key]['resource']['generate'] is False:
-                        namespace = documents['info']['namespace']
                         model_path = documents['items'][key]['resource']['model_path']
 
                         
@@ -228,7 +286,9 @@ for get_namespace in os.listdir(itemadder):
                                     
                                     
                                     
-                                    
+                                    if not os.path.exists("./Output/assets/minecraft/models/item"):
+                                        os.makedirs("./Output/assets/minecraft/models/item")
+
 
                                     # red and edit file
                                     with open('./Output/assets/minecraft/models/item/'+armor_list[_met]+'.json', 'w') as jsonfile:
@@ -269,15 +329,7 @@ for get_namespace in os.listdir(itemadder):
                                             os.makedirs("./Output/tmp/armors")                                 
                                         img.save("./Output/tmp/armors/"+os.path.basename(_layer_2)+".png")
                                         add_img_armor("./Output/tmp/armors/"+os.path.basename(_layer_2)+".png","./Output/assets/minecraft/textures/models/armor/leather_layer_2.png")
-                                        
-
-                            
-
-                                    
-
-
-             
-
+ 
         alt_dat = sorted(set(alt_dat))
         alt_data = { "sources": [  ]}
         
@@ -287,12 +339,13 @@ for get_namespace in os.listdir(itemadder):
         # /Output/assets/minecraft/atlases/blocks.json check create path
         if not os.path.exists("./Output/assets/minecraft"):
             os.mkdir('./Output/assets/minecraft')
-        if not os.path.exists("./Output/assets/minecraft/atlases"):
-            os.mkdir('./Output/assets/minecraft/atlases')
-        if os.path.exists("./Output/assets/minecraft/atlases/blocks.json"):
-            os.remove("./Output/assets/minecraft/atlases/blocks.json")
-        with open('./Output/assets/minecraft/atlases/blocks.json', 'w') as jsonfile:
-            json.dump(alt_data, jsonfile)
+        if alt_data["sources"] != []:
+            if not os.path.exists("./Output/assets/minecraft/atlases"):
+                os.mkdir('./Output/assets/minecraft/atlases')
+            if os.path.exists("./Output/assets/minecraft/atlases/blocks.json"):
+                os.remove("./Output/assets/minecraft/atlases/blocks.json")
+            with open('./Output/assets/minecraft/atlases/blocks.json', 'w') as jsonfile:
+                json.dump(alt_data, jsonfile)
 
                 
 
@@ -351,14 +404,28 @@ if fix_id_10101 ==False:
 if os.path.exists("./Output/tmp"):
     shutil.rmtree("./Output/tmp")
 # list_give_items to text
-with open('./Output/give_items.txt', 'w') as f:
-    for i in list_give_items:
-        f.write(i+'\n\n')
-with open('./Output/give_items_1_20_6.txt', 'w') as f:
-    for i in list_give_items_1_20_6:
-        f.write(i+'\n\n')
-# if os.path.exists("C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output"):
-#     shutil.rmtree("C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output")
-# shutil.copytree('./Output', 'C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output')    
+if list_give_items != []:
+    with open('./Output/give_items.txt', 'w') as f:
+        for i in list_give_items:
+            f.write(i+'\n\n')
+if list_give_items_1_20_6 != []:
+    with open('./Output/give_items_1_20_6.txt', 'w') as f:
+        for i in list_give_items_1_20_6:
+            f.write(i+'\n\n')
+
+if json_fonts["providers"] != []:
+    if not os.path.exists("./Output/assets/minecraft/font"):
+        os.makedirs("./Output/assets/minecraft/font")
+    with open('./Output/assets/minecraft/font/default.json', 'w',encoding="utf-8") as f:
+        json.dump(json_fonts, f,ensure_ascii=False)
+    with open("./Output/font_unicode.txt","w",encoding="utf-8") as f:
+        for i in txt_fonts:
+            f.write(i+"\n")
+
+if len(os.listdir("./Output/assets/minecraft")) == 0:
+    shutil.rmtree("./Output/assets/minecraft")
+if os.path.exists("C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output"):
+    shutil.rmtree("C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output")
+shutil.copytree('./Output', 'C:/Users/kig/AppData/Roaming/PrismLauncher/instances/1.20.2(1)/.minecraft/resourcepacks/Output')    
 
 print('Done!')

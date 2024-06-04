@@ -26,7 +26,6 @@ def pain_armor(part_file,hex):
     img = Image.open(part_file)
     img = img.convert("RGBA")
     pixels = img.load()
-    # print(hex_to_rgb(hex))
     pixels[0,0] = hex_to_rgb(hex)
     img.save(part_file)
 
@@ -94,7 +93,6 @@ def add_img_armor(input_img,layer_name,input_colors):
             max_height_size = _height
         if _width > max_width_size:
             max_width_size = _width
-    # print(max_height_size)
     for part_img in input_img:
         _im = Image.open(part_img)
         _width, _height = _im.size
@@ -386,10 +384,10 @@ for get_namespace in os.listdir(itemadder):
 
 alt_dat = sorted(set(alt_dat))
 alt_data = { "sources": [  ]}
-
-add_img_armor(armor_layer_1_lists,"layer_1",armor_layer_1_lists_colors)
-add_img_armor(armor_layer_2_lists,"layer_2",armor_layer_2_lists_colors)
-# print(armor_layer_1_lists)
+if armor_layer_1_lists != []:
+    add_img_armor(armor_layer_1_lists,"layer_1",armor_layer_1_lists_colors)
+if armor_layer_2_lists != []:
+    add_img_armor(armor_layer_2_lists,"layer_2",armor_layer_2_lists_colors)
 
 for i in alt_dat:
     alt_data['sources'].append({ "type": "single", "resource": i })
@@ -440,11 +438,6 @@ for k in item_m:
                 for i in data["overrides"]:
                     if "custom_model_data" in i["predicate"]:
                         sl[i["predicate"]["custom_model_data"]] = i
-                
-                # slot key sl
-                # data["overrides"] = []
-                # for i in sorted(sl):
-                #     data["overrides"].append(sl[i])
                 with open('./Output/assets/minecraft/models/item/'+k.lower()+'.json', 'w') as jsonfile:
                     json.dump(data, jsonfile)
 for items in glob.glob("./Output/assets/minecraft/models/item/*.json"):

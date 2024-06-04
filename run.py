@@ -101,6 +101,7 @@ def add_img_armor(input_img,layer_name,input_colors):
         _im = _im.resize((max_width_size, max_height_size),Image.NEAREST)
         _im.save("./Output/tmp/armors/"+layer_name+"/"+os.path.basename(part_img))
         pain_armor("./Output/tmp/armors/"+layer_name+"/"+os.path.basename(part_img),input_colors[os.path.basename(part_img)])
+        os.remove(part_img)
     shutil.copy(f"./default_model/textures/models/armor_{max_height_size}/leather_{layer_name}.png",f"./Output/assets/minecraft/textures/models/armor/leather_{layer_name}.png")
     
     

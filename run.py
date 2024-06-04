@@ -454,8 +454,8 @@ for items in glob.glob("./Output/assets/minecraft/models/item/*.json"):
     with open(items, 'w') as jsonfile:
         json.dump(data, jsonfile)
 
-# if os.path.exists("./Output/tmp"):
-#     shutil.rmtree("./Output/tmp")
+if os.path.exists("./Output/tmp"):
+    shutil.rmtree("./Output/tmp")
 # list_give_items to text
 if list_give_items != []:
     with open('./Output/give_items.txt', 'w') as f:

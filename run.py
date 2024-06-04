@@ -22,6 +22,14 @@ def generate_random_unused_unicode():
     
     return unicode_char
 
+def pain_armor(part_file,hex):
+    img = Image.open(part_file)
+    img = img.convert("RGBA")
+    pixels = img.load()
+    # print(hex_to_rgb(hex))
+    pixels[0,0] = hex_to_rgb(hex)
+    img.save(part_file)
+
 def font_image_unicode(name):
     list_unicode = []
     with open("./storage/font_images_unicode_cache.yml", 'r', encoding='utf-8') as file:
@@ -44,15 +52,18 @@ def item_get_cmdata(type:str,name:str):
     _custommodeldata = 10101
     history = {}
     with open("./storage/items_cache.yml", 'r', encoding='utf-8') as file:
-        history = yaml.safe_load(file)
+        _history = yaml.safe_load(file)
+        if _history != None:
+            history = _history
+    
     if type.upper() in history:
         if name in history[type.upper()]:
             return int(history[type.upper()][name])
         else:
             _custommodeldata = max(history[type.upper()].values())+1
             history[type.upper()][name] = _custommodeldata
-    else:
-        history[type.upper()] = {name:_custommodeldata}
+    else:        
+        history[str(type.upper())] = {name:_custommodeldata}
     with open("./storage/items_cache.yml", 'w', encoding='utf-8') as file:
         yaml.dump(history, file,sort_keys=False)
     return int(_custommodeldata)
@@ -72,35 +83,48 @@ def hex_to_dec(hex_color):
     return str(int(hex_color, 16))
 
 
-def add_img_armor(input_img,output_img):
-    image1 = Image.open(output_img)
-    image2 = Image.open(input_img)
-
+def add_img_armor(input_img,layer_name,input_colors):
+    max_height_size = 0
+    max_width_size = 0
+    
+    for part_img in input_img:
+        _im = Image.open(part_img)
+        _width, _height = _im.size
+        if _height > max_height_size:
+            max_height_size = _height
+        if _width > max_width_size:
+            max_width_size = _width
+    # print(max_height_size)
+    for part_img in input_img:
+        _im = Image.open(part_img)
+        _width, _height = _im.size
+        _im = _im.resize((max_width_size, max_height_size),Image.NEAREST)
+        _im.save("./Output/tmp/armors/"+layer_name+"/"+os.path.basename(part_img))
+        pain_armor("./Output/tmp/armors/"+layer_name+"/"+os.path.basename(part_img),input_colors[os.path.basename(part_img)])
+    shutil.copy(f"./default_model/textures/models/armor_{max_height_size}/leather_{layer_name}.png",f"./Output/assets/minecraft/textures/models/armor/leather_{layer_name}.png")
+    
+    
+    image1 = Image.open(f"./Output/assets/minecraft/textures/models/armor/leather_{layer_name}.png")
     width1, height1 = image1.size
-    width2, height2 = image2.size
-    max_height = max(height1, height2)
-    # if height1 < height2:        
-    #     image1 = image1.resize(((width2*2), height2))
-    if height2 < height1:        
-        # image1 = Image.open()
-        image1 = Image.open("./default_model/textures/models/armor_16/"+os.path.basename(output_img))
-        max_height = min(height1, height2)
+    
+    for img_armor in glob.glob("./Output/tmp/armors/"+layer_name+"/*"):
+        image2 = Image.open(img_armor)
+        width2, height2 = image2.size
+        total_width = width1 + width2
+        combined_image = Image.new('RGBA', (total_width, max_height_size))
+        combined_image.paste(image1, (0, 0))
+        combined_image.paste(image2, (width1, 0))
+        combined_image.save(f"./Output/assets/minecraft/textures/models/armor/leather_{layer_name}.png")
+        image1 = Image.open(f"./Output/assets/minecraft/textures/models/armor/leather_{layer_name}.png")
+        width1, height1 = image1.size
+
+    if max_height_size == 32:
         with open('./Output/assets/minecraft/shaders/core/rendertype_armor_cutout_no_cull.fsh', 'r') as f:
             shader = f.read()
         shader = shader.replace("#define TEX_RES 32","#define TEX_RES 16")
         with open('./Output/assets/minecraft/shaders/core/rendertype_armor_cutout_no_cull.fsh', 'w') as f:
             f.write(shader)
-            
-    width1, height1 = image1.size
-    width2, height2 = image2.size
 
-
-    total_width = width1 + width2 
-
-    combined_image = Image.new('RGBA', (total_width, max_height))
-    combined_image.paste(image1, (0, 0))
-    combined_image.paste(image2, (width1, 0))
-    combined_image.save(output_img)
 
 
 if not os.path.exists("./storage"):
@@ -157,6 +181,10 @@ list_give_items_1_20_6 = []
 alt_dat = []
 json_fonts = {"providers": []}
 txt_fonts = []
+armor_layer_1_lists = []
+armor_layer_2_lists = []
+armor_layer_1_lists_colors = {}
+armor_layer_2_lists_colors = {}
 
 for get_namespace in os.listdir(itemadder):
     if os.path.exists(f"{itemadder}/{get_namespace}/resourcepack/assets/minecraft"):
@@ -282,19 +310,35 @@ for get_namespace in os.listdir(itemadder):
                                     armor_list = {"head":"leather_helmet","chest":"leather_chestplate","legs":"leather_leggings","feet":"leather_boots"}
                                     data = {}
                                     if fix_id_10101 == False:
-                                        id = item_get_cmdata(armor_list[_met],namespace+":"+key)                                    
+                                        id = item_get_cmdata(armor_list[_met],namespace+":"+key)
                                     texture_path = documents['items'][key]['resource']['textures'][-1] .replace(".png","")
                                     alt_dat.append( namespace+":"+texture_path)
                                     # print(documents['items'][key]['specific_properties']['armor']['slot'])
-                                    for file in glob.glob("./default_model/**/"+armor_list[_met]+".json", recursive=True):
-                                        with open(file, 'r') as f:
-                                            data = json.load(f)
+                                    
+                                    
+                                    
                                     icon_json = {"parent": "minecraft:item/generated","textures": {"layer0": "item/empty","layer1": namespace+":"+texture_path}}
                                     # wite json
                                     with open('./Output/assets/'+namespace+'/models/'+key+'.json', 'w') as jsonfile:
                                         json.dump(icon_json, jsonfile)
+
+
+
+                                    if not os.path.exists("./Output/assets/minecraft/models/item"):
+                                        os.makedirs("./Output/assets/minecraft/models/item")
+                                    if not os.path.exists('./Output/assets/minecraft/models/item/'+armor_list[_met]+'.json'):
+                                        for file in glob.glob("./default_model/**/"+armor_list[_met]+".json", recursive=True):
+                                            with open(file, 'r') as f:
+                                                data = json.load(f)
+                                    else:
+                                        with open('./Output/assets/minecraft/models/item/'+armor_list[_met]+'.json') as f:
+                                            data = json.load(f)
                                     if 'overrides' not in data:
                                         data['overrides'] = []
+                                        
+                                    
+                                    
+                                    
                                     _color=documents['armors_rendering'][documents['items'][key]['specific_properties']['armor']['custom_armor']]['color']              
                                     list_give_items.append(namespace+":"+key+"  |  /minecraft:give @p minecraft:"+armor_list[_met].lower()+"{CustomModelData:"+str(id)+",display:{Name:'[{\"text\":\""+documents['items'][key]["display_name"]+"\",\"italic\":false}]',color:"+hex_to_dec(_color)+"}}")
                                     list_give_items_1_20_6.append(namespace+":"+key+"  |  /minecraft:give @p minecraft:"+armor_list[_met].lower()+"[custom_model_data="+str(id)+", custom_name='{\"text\":\""+documents['items'][key]["display_name"]+"\", \"italic\":false}',dyed_color={rgb:"+hex_to_dec(_color)+"}]")
@@ -305,8 +349,7 @@ for get_namespace in os.listdir(itemadder):
                                     
                                     
                                     
-                                    if not os.path.exists("./Output/assets/minecraft/models/item"):
-                                        os.makedirs("./Output/assets/minecraft/models/item")
+
 
 
                                     # red and edit file
@@ -318,7 +361,7 @@ for get_namespace in os.listdir(itemadder):
                                         os.makedirs("./Output/assets/minecraft/textures/item")
                                         shutil.copy("./default_model/textures/item/empty.png","./Output/assets/minecraft/textures/item")
                                     if not os.path.exists("./Output/assets/minecraft/textures/models/armor"):                                        
-                                        shutil.copytree("./default_model/textures/models/armor","./Output/assets/minecraft/textures/models/armor")
+                                        shutil.copytree("./default_model/textures/models/armor_overlay","./Output/assets/minecraft/textures/models/armor")
                                     
                                     
                                     if 'chest' ==_met:
@@ -327,44 +370,39 @@ for get_namespace in os.listdir(itemadder):
                                         _color=documents['armors_rendering'][documents['items'][key]['specific_properties']['armor']['custom_armor']]['color']
                                         
                                         if not os.path.exists("./Output/tmp/armors"):
-                                            os.makedirs("./Output/tmp/armors")       
+                                            os.makedirs("./Output/tmp/armors/layer_1")       
+                                            os.makedirs("./Output/tmp/armors/layer_2")       
                                         if not os.path.exists("./Output/assets/minecraft/shaders"):
                                             shutil.copytree("./default_model/shaders", "./Output/assets/minecraft/shaders")
 
-                                        img = Image.open(itemadder+'/'+get_namespace+"/resourcepack/assets/"+namespace+"/textures/"+_layer_1+".png")
-                                        img = img.convert("RGBA")
-                                        pixels = img.load()
-                                        # print(hex_to_rgb(_color))
-                                        pixels[0,0] = hex_to_rgb(_color)
-                                        img.save("./Output/tmp/armors/"+os.path.basename(_layer_1)+".png")
-                                        add_img_armor("./Output/tmp/armors/"+os.path.basename(_layer_1)+".png","./Output/assets/minecraft/textures/models/armor/leather_layer_1.png")
 
-                                        
-                                        img = Image.open(itemadder+'/'+get_namespace+"/resourcepack/assets/"+namespace+"/textures/"+_layer_2+".png")
-                                        img = img.convert("RGBA")
-                                        pixels = img.load()
-                                        pixels[0,0] = hex_to_rgb(_color)
-                                        if not os.path.exists("./Output/tmp/armors"):
-                                            os.makedirs("./Output/tmp/armors")                                 
-                                        img.save("./Output/tmp/armors/"+os.path.basename(_layer_2)+".png")
-                                        add_img_armor("./Output/tmp/armors/"+os.path.basename(_layer_2)+".png","./Output/assets/minecraft/textures/models/armor/leather_layer_2.png")
- 
-        alt_dat = sorted(set(alt_dat))
-        alt_data = { "sources": [  ]}
-        
-        for i in alt_dat:
-            alt_data['sources'].append({ "type": "single", "resource": i })
-    
-        # /Output/assets/minecraft/atlases/blocks.json check create path
-        if not os.path.exists("./Output/assets/minecraft"):
-            os.mkdir('./Output/assets/minecraft')
-        if alt_data["sources"] != []:
-            if not os.path.exists("./Output/assets/minecraft/atlases"):
-                os.mkdir('./Output/assets/minecraft/atlases')
-            if os.path.exists("./Output/assets/minecraft/atlases/blocks.json"):
-                os.remove("./Output/assets/minecraft/atlases/blocks.json")
-            with open('./Output/assets/minecraft/atlases/blocks.json', 'w') as jsonfile:
-                json.dump(alt_data, jsonfile)
+                                        # pain_armor("./Output/assets/"+namespace+"/textures/"+_layer_1+".png",_color)
+                                        armor_layer_1_lists_colors[os.path.basename(_layer_1+".png")]  = _color
+                                        armor_layer_1_lists.append("./Output/assets/"+namespace+"/textures/"+_layer_1+".png")
+                                        # pain_armor("./Output/assets/"+namespace+"/textures/"+_layer_2+".png",_color)
+                                        armor_layer_2_lists_colors[os.path.basename(_layer_2+".png")]  = _color
+                                        armor_layer_2_lists.append("./Output/assets/"+namespace+"/textures/"+_layer_2+".png")
+
+alt_dat = sorted(set(alt_dat))
+alt_data = { "sources": [  ]}
+
+add_img_armor(armor_layer_1_lists,"layer_1",armor_layer_1_lists_colors)
+add_img_armor(armor_layer_2_lists,"layer_2",armor_layer_2_lists_colors)
+# print(armor_layer_1_lists)
+
+for i in alt_dat:
+    alt_data['sources'].append({ "type": "single", "resource": i })
+
+# /Output/assets/minecraft/atlases/blocks.json check create path
+if not os.path.exists("./Output/assets/minecraft"):
+    os.mkdir('./Output/assets/minecraft')
+if alt_data["sources"] != []:
+    if not os.path.exists("./Output/assets/minecraft/atlases"):
+        os.mkdir('./Output/assets/minecraft/atlases')
+    if os.path.exists("./Output/assets/minecraft/atlases/blocks.json"):
+        os.remove("./Output/assets/minecraft/atlases/blocks.json")
+    with open('./Output/assets/minecraft/atlases/blocks.json', 'w') as jsonfile:
+        json.dump(alt_data, jsonfile)
 
                 
 
@@ -416,8 +454,8 @@ for items in glob.glob("./Output/assets/minecraft/models/item/*.json"):
     with open(items, 'w') as jsonfile:
         json.dump(data, jsonfile)
 
-if os.path.exists("./Output/tmp"):
-    shutil.rmtree("./Output/tmp")
+# if os.path.exists("./Output/tmp"):
+#     shutil.rmtree("./Output/tmp")
 # list_give_items to text
 if list_give_items != []:
     with open('./Output/give_items.txt', 'w') as f:
@@ -439,7 +477,6 @@ if json_fonts["providers"] != []:
 
 if len(os.listdir("./Output/assets/minecraft")) == 0:
     shutil.rmtree("./Output/assets/minecraft")
-
 
 
 
